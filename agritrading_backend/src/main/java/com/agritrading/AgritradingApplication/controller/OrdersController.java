@@ -167,25 +167,61 @@ public class OrdersController {
 
     }
 
+    @PatchMapping("/orders/status")
+    public ResponseEntity<Response> updateOrderStatus(
+            @RequestParam("orderId") int orderId,
+            Authentication authentication) throws Exception {
+//        Integer farmerId = farmerId(authentication);
+//        Integer customerId = customerId(authentication);
+
+        // Retrieve the order to ensure it exists and is accessible to the user
+        Orders order = ordersRepository.getById(orderId);
+
+//        if (order.getCustomer().getCustomerId() != customerId && order.getFarmer().getFarmerId() != farmerId) {
+//            throw new Exception("Not allowed to update this order");
+//        }
+
+        // Update the order status
+        order.setOrder_status("COMPLETED");
+        Orders updatedOrder = ordersRepository.save(order);
+
+        // Prepare the response
+        AddOrderResponseDTO orderResponse = AddOrderResponseDTO.builder()
+                .customerName(updatedOrder.getCustomer().getName())
+                .orderId(updatedOrder.getOrder_Id())
+                .productName(updatedOrder.getProduct().getProd_Name())
+                .quantity(updatedOrder.getQuantity())
+                .totalPrice(updatedOrder.getTotal_Price())
+                .orderStatus(updatedOrder.getOrder_status())
+                .build();
+
+        Response response = Response.builder()
+                .status(HttpStatus.OK.value())
+                .message("Order status updated to Completed")
+                .addOrderResponse(orderResponse)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
 
     @DeleteMapping("/orders")
     public void deleteOrder(@RequestParam("id")int orderId, Authentication authentication) throws Exception {
         Integer farmerId = farmerId(authentication);
-        Integer customerId = customerId(authentication);
+//        Integer customerId = customerId(authentication);
 
-        if(customerId != null) {
-            if(ordersRepository.findById(orderId).isPresent()) {
-                if(ordersRepository.findById(orderId).get().getCustomer().getCustomerId()==customerId) { ordersRepository.deleteById(orderId); }
-            }
-        }
+//        if(customerId != null) {
+//            if(ordersRepository.findById(orderId).isPresent()) {
+//                if(ordersRepository.findById(orderId).get().getCustomer().getCustomerId()==customerId) { ordersRepository.deleteById(orderId); }
+//            }
+//        }
 
         if(farmerId != null) {
             if(ordersRepository.findById(orderId).isPresent()) {
                 if(ordersRepository.findById(orderId).get().getProduct().getFarmer().getFarmerId()==farmerId) { ordersRepository.deleteById(orderId); }
             }
         }
-
-        throw new Exception("Not Authorized");
     }
 
 

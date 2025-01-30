@@ -26,6 +26,11 @@ public class ProductsService {
         return MapProductDTO.map(productsList);
     }
 
+    public List<ProductDTO> getAllProductsForCustomer() {
+        List<Products> productsList = productsRepository.findAll();
+        return MapProductDTO.map(productsList);
+    }
+
     public ProductDTO getProductById(Integer id) throws Exception {
         Optional<Products> productOptional = productsRepository.findById(id);
 

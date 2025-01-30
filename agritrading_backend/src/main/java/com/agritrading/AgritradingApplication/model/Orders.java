@@ -1,7 +1,9 @@
 package com.agritrading.AgritradingApplication.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
 
 import java.util.Date;
 

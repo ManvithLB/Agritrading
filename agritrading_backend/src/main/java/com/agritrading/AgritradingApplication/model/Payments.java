@@ -2,6 +2,8 @@ package com.agritrading.AgritradingApplication.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.Date;
 
@@ -14,6 +16,7 @@ public class Payments {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Orders order;
 
     private int amount;

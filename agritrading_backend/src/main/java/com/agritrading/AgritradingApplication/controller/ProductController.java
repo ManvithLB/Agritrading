@@ -112,24 +112,76 @@ public class ProductController {
     }
 
     @PutMapping("/product")
-    public ResponseEntity<Response> updateProduct(@RequestBody Products products , @RequestParam("id") int id, Authentication authentication) throws Exception {
+    public ResponseEntity<Response> updateProduct(
+            @RequestPart("products") String productsJson,
+            @RequestParam(value = "prodImage", required = false) MultipartFile prodImage,
+            @RequestParam("id") int id,
+            Authentication authentication) throws Exception {
         String username = authentication.getName();
         Users user = userRepo.findByUsername(username);
         int farmerId = user.getFarmerId();
 
-        if(productsRepository.getById(id).getFarmer().getFarmerId()==farmerId) {
-            productsRepository.deleteById(id);
-            products.setFarmer(farmersRepository.findById(farmerId).orElse(null));
-            ProductDTO productResponse =  productsService.addProduct(products);
+        Products existingProduct = productsRepository.findById(id).orElseThrow(() -> new Exception("Product not found"));
 
-            Response response = Response.builder()
-                    .status(HttpStatus.CREATED.value())
-                    .message("Order created successfully")
-                    .product(productResponse).build();
-
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        // Check ownership
+        if (existingProduct.getFarmer().getFarmerId() != farmerId) {
+            throw new Exception("Not allowed to update this product");
         }
-        throw  new Exception("Not Allowed to delete the product");
+
+        // Parse product JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        Products updatedProduct = objectMapper.readValue(productsJson, Products.class);
+
+        // Handle image upload
+        if (prodImage != null && !prodImage.isEmpty()) {
+            String uploadDirectory = "src/main/resources/static/images/products";
+            String prodImageUrl = ImageService.saveImageToStorage(uploadDirectory, prodImage);
+            updatedProduct.setProd_Img(prodImageUrl);
+        } else {
+            updatedProduct.setProd_Img(existingProduct.getProd_Img()); // Use existing image
+        }
+
+        updatedProduct.setProd_id(existingProduct.getProd_id());
+        updatedProduct.setFarmer(farmersRepository.findById(farmerId).orElse(null));
+
+        ProductDTO productResponse = productsService.addProduct(updatedProduct);
+
+        Response response = Response.builder()
+                .status(HttpStatus.OK.value())
+                .message("Product updated successfully")
+                .product(productResponse)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @DeleteMapping("/product")
+    public ResponseEntity<Response> deleteProduct(
+            @RequestParam("id") int id,
+            Authentication authentication) throws Exception {
+        String username = authentication.getName();
+        Users user = userRepo.findByUsername(username);
+        int farmerId = user.getFarmerId();
+
+        Products product = productsRepository.findById(id).orElseThrow(() -> new Exception("Product not found"));
+
+        // Check ownership
+        if (product.getFarmer().getFarmerId() != farmerId) {
+            throw new Exception("Not allowed to delete this product");
+        }
+
+        productsRepository.deleteById(id);
+
+        Response response = Response.builder()
+                .status(HttpStatus.OK.value())
+                .message("Product deleted successfully")
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
 
 }

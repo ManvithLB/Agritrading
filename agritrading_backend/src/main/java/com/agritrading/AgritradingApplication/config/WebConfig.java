@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
         // Allow requests from your frontend (localhost:3000)
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:3000") // Frontend URL
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed HTTP methods
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH") // Allowed HTTP methods
                 .allowedHeaders("*") // Allow all headers
                 .allowCredentials(true); // Allow credentials (cookies, authorization headers, etc.)
     }
